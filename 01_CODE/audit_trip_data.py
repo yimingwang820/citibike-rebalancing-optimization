@@ -2,8 +2,8 @@
 """Day 1 Citi Bike audit. Python 3.10+. No optimizer required.
 
 Examples:
- python day1_citibike_audit.py --zip ./202604-citibike-tripdata.zip --output ./results
- python day1_citibike_audit.py --zip ./202604-citibike-tripdata.zip --metadata ./station_information.json --output ./results
+ python audit_trip_data.py --zip ./202604-citibike-tripdata.zip --output ./results
+ python audit_trip_data.py --zip ./202604-citibike-tripdata.zip --metadata ./station_information.json --output ./results
 
 Only trip-data-derived statistics are historical. Live metadata capacity is tagged
 as a CURRENT snapshot and is never represented as historical capacity.

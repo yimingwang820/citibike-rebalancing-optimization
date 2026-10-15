@@ -27,9 +27,9 @@ import json
 
 import pandas as pd
 
-import day5_event_baseline as baseline_module
-import day5_timeout_replay as timeout_module
-import day5_extract_events as extract_module
+import event_baseline as baseline_module
+import timeout_simulation as timeout_module
+import extract_trip_events as extract_module
 
 
 ROOT = Path(r"D:\BikeSharing_OR_Project")

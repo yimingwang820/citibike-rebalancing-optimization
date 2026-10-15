@@ -4,8 +4,8 @@
 Day 3：固定调拨任务成本敏感性分析
 
 依赖：
-    day3_fixed_charge_milp.py
-    day3_single_period_lp.py
+    fixed_charge_milp.py
+    single_period_lp.py
 
 运行：
     直接运行本文件，不需要命令行参数。
@@ -18,7 +18,7 @@ Day 3：固定调拨任务成本敏感性分析
 import csv
 import json
 
-import day3_fixed_charge_milp as base
+import fixed_charge_milp as base
 
 
 FIXED_COST_VALUES = [0, 1, 3, 5, 10]

@@ -9,7 +9,7 @@ Day 3：Citi Bike 固定调拨任务成本 MILP
 
 依赖：
     gurobipy
-    day3_single_period_lp.py（上一节已经运行成功）
+    single_period_lp.py（上一节已经运行成功）
 
 运行：
     直接在 VS Code 中运行本文件即可。
@@ -25,7 +25,7 @@ from pathlib import Path
 import gurobipy as gp
 from gurobipy import GRB
 
-from day3_single_period_lp import (
+from single_period_lp import (
     ROOT,
     distance_km,
     load_average_departures,

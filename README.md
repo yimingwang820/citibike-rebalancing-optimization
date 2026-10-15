@@ -48,7 +48,7 @@
 
 ## 项目文件
 
-- `01_CODE/`：数据处理、Gurobi及事件仿真代码
+- `01_CODE/`：23个按功能命名的正式程序，当前仍保留在同一目录
 - `03_SHOWCASE/MODEL_AND_LIMITATIONS.md`：模型说明
 - `03_SHOWCASE/EXPERIMENTS.md`：实验结果
 - `03_SHOWCASE/*.png`：结果图
@@ -75,21 +75,24 @@
 本地原始数据放在 `00_DATA/`；
 中间数据与结果保存在 `02_RESULTS/`。
 
-大致流程：
+主流程：
 
-1. Day 1：数据审计
-2. Day 2：站点ID修复与库存初始化
-3. Day 3–4：LP/MILP与多周期库存优化
-4. Day 5：订单级事件仿真
-5. Day 6：工作日与周末训练验证
-6. Day 7：报告与项目交付
+1. 订单审计、站点ID修复、研究区域选择与初始库存构建。
+2. 构建工作日小时流量，提取开发日订单并生成事件仿真基线。
+3. 求解工作日午夜预调拨方案，在开发日诊断并进行跨日期验证。
+4. 独立训练周末方案，再进行三折代理验证与周末事件验证。
 
-主要脚本：
+建议优先阅读：
 
-- `01_CODE/day6_train_preposition.py`
-- `01_CODE/day6_holdout_validation.py`
-- `01_CODE/day6_weekend_train.py`
-- `01_CODE/day6_weekend_validate.py`
+- [weekday_preposition.py](01_CODE/weekday_preposition.py)：工作日优化模型；入口还会运行开发日仿真。
+- [timeout_simulation.py](01_CODE/timeout_simulation.py)：30分钟超时事件仿真。
+- [holdout_validation.py](01_CODE/holdout_validation.py)：冻结工作日方案的跨日期验证。
+- [weekend_preposition.py](01_CODE/weekend_preposition.py)：周末12/24小时优化模型。
+- [weekend_validation.py](01_CODE/weekend_validation.py)：三折重新求解及周末事件验证。
+
+LP/MILP、固定成本和小时级多周期模型保留为对照实验，
+其求解结果不是最终预调拨主流程的必要输入。
+现有 `02_RESULTS/DAY*` 目录和冻结结果文件名保持不变。
 
 多数脚本使用 `D:\BikeSharing_OR_Project` 绝对路径，
 迁移到其他设备需要调整路径。

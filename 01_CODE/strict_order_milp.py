@@ -23,7 +23,7 @@ from pathlib import Path
 import gurobipy as gp
 from gurobipy import GRB
 
-import day4_multi_period_milp as previous
+import hourly_balance_milp as previous
 
 
 # ==================================================

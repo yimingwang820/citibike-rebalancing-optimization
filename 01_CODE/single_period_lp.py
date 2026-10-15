@@ -7,7 +7,7 @@ Model: all rebalancing happens before borrowing; no arrivals during this hour.
 This is a *scenario model*, not a reconstruction of historical operations.
 
 Windows PowerShell (from project directory):
-    & "D:\\Python\\python3.12.1\\python.exe" "01_CODE\\day3_single_period_lp.py"
+    & "D:\\Python\\python3.12.1\\python.exe" "01_CODE\\single_period_lp.py"
 
 Requires: gurobipy (already installed in the user's environment).
 """

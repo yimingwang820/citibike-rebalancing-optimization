@@ -6,10 +6,10 @@ Day 6-F:
 2. 冻结策略在4月25-26日的事件级验证
 
 依赖之前已经运行成功的：
-- day6_weekend_train.py
-- day6_holdout_validation.py
-- day5_event_baseline.py
-- day5_timeout_replay.py
+- weekend_preposition.py
+- holdout_validation.py
+- event_baseline.py
+- timeout_simulation.py
 
 直接运行，不需要命令行参数。
 """
@@ -20,10 +20,10 @@ import json
 
 import pandas as pd
 
-import day6_weekend_train as wk
-import day6_holdout_validation as hold
-import day5_event_baseline as event_base
-import day5_timeout_replay as event_model
+import weekend_preposition as wk
+import holdout_validation as hold
+import event_baseline as event_base
+import timeout_simulation as event_model
 
 
 ROOT = Path(r"D:\BikeSharing_OR_Project")

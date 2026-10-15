@@ -3,7 +3,7 @@
 """Citi Bike 站点 ID 格式别名修复：保留原始文件，输出规范化副本及审计记录。
 
 示例（在项目根目录）：
-python 01_CODE/day2_fix_station_ids.py --input-dir 02_RESULTS \
+python 01_CODE/normalize_station_ids.py --input-dir 02_RESULTS \
     --metadata 00_DATA/station_information.json --output-dir 02_RESULTS/DAY2_ID_FIXED
 """
 
