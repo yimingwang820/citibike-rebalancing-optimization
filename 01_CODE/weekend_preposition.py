@@ -25,7 +25,7 @@ import pandas as pd
 # 1. 基本设置
 # ==================================================
 
-ROOT = Path(r"D:\BikeSharing_OR_Project")
+from project_paths import ROOT
 RESULTS = ROOT / "02_RESULTS"
 
 STATION_FILE = (

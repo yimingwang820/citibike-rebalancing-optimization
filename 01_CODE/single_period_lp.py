@@ -21,7 +21,7 @@ import json
 import math
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from project_paths import ROOT
 
 
 def load_inventory(path: Path, scenario: str) -> list[dict]:

@@ -32,7 +32,7 @@ import timeout_simulation as timeout_module
 import extract_trip_events as extract_module
 
 
-ROOT = Path(r"D:\BikeSharing_OR_Project")
+from project_paths import ROOT
 
 PLAN_DIR = (
     ROOT / "02_RESULTS"

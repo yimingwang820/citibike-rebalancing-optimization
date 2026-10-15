@@ -26,7 +26,7 @@ import event_baseline as event_base
 import timeout_simulation as event_model
 
 
-ROOT = Path(r"D:\BikeSharing_OR_Project")
+from project_paths import ROOT
 
 RESULTS = ROOT / "02_RESULTS"
 

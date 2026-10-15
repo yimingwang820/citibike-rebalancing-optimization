@@ -28,7 +28,7 @@ import numpy as np
 # 1. 路径和参数
 # ==================================================
 
-ROOT = Path(r"D:\BikeSharing_OR_Project")
+from project_paths import ROOT
 
 SEED = "5980.10"
 

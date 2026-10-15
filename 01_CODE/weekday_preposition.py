@@ -20,7 +20,7 @@ import event_baseline as event_base
 import timeout_simulation as timeout_replay
 
 
-ROOT = Path(r"D:\BikeSharing_OR_Project")
+from project_paths import ROOT
 
 OUTPUT = (
     ROOT / "02_RESULTS" / "DAY6_PREPOSITION"

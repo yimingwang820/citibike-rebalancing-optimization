@@ -25,7 +25,7 @@ import pandas as pd
 # 1. 路径及参数
 # ==================================================
 
-ROOT = Path(r"D:\BikeSharing_OR_Project")
+from project_paths import ROOT
 
 TARGET_DATE = "2026-04-21"
 SEED = "5980.10"

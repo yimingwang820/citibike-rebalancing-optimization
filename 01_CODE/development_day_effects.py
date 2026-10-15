@@ -19,7 +19,7 @@ import json
 import pandas as pd
 
 
-ROOT = Path(r"D:\BikeSharing_OR_Project")
+from project_paths import ROOT
 
 INPUT = ROOT / "02_RESULTS" / "DAY6_PREPOSITION"
 

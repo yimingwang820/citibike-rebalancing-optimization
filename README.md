@@ -94,8 +94,14 @@ LP/MILP、固定成本和小时级多周期模型保留为对照实验，
 其求解结果不是最终预调拨主流程的必要输入。
 现有 `02_RESULTS/DAY*` 目录和冻结结果文件名保持不变。
 
-多数脚本使用 `D:\BikeSharing_OR_Project` 绝对路径，
-迁移到其他设备需要调整路径。
+项目根目录由 `01_CODE/project_paths.py` 根据代码位置确定，不依赖启动目录。
+可在启动 Python 前设置环境变量 `CITIBIKE_PROJECT_ROOT` 指向另一份项目根目录；
+所有模块在导入时绑定同一根目录，导入后改变环境变量不会更新已绑定路径，应重启进程。
+
+CLI 显式相对路径仍相对于当前工作目录。为保留已有默认行为，
+`audit_trip_data.py` 的 `audit_results` 和 `select_study_area.py` 的相对路径默认值保持原样；
+这两个入口从其他目录启动时须显式传入绝对输入/输出路径（详见复现说明）。
+默认运行仍可能覆盖原结果，检查时不要执行正式入口。
 
 完整阶段依赖见
 `03_SHOWCASE/REPRODUCIBILITY.md`。

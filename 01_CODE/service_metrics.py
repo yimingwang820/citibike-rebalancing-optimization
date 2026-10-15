@@ -18,7 +18,7 @@ from pathlib import Path
 import pandas as pd
 
 
-ROOT = Path(r"D:\BikeSharing_OR_Project")
+from project_paths import ROOT
 
 INPUT = (
     ROOT / "02_RESULTS"

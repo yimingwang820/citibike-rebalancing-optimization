@@ -83,9 +83,26 @@ python 01_CODE/weekend_validation.py
 
 ## 复现边界
 
-大多数脚本使用固定的
-D:\BikeSharing_OR_Project 路径。
-迁移电脑需要调整路径常量。
+项目根目录由 `01_CODE/project_paths.py` 根据代码位置确定，不依赖启动目录。
+可在启动 Python 前设置环境变量 `CITIBIKE_PROJECT_ROOT` 指向另一份项目根目录；
+所有模块在导入时绑定同一根目录，导入后改变环境变量不会更新已绑定路径，应重启进程。
+
+CLI 显式相对路径仍相对于当前工作目录。为保留已有默认行为，
+`audit_trip_data.py` 的 `audit_results` 和 `select_study_area.py` 的相对路径默认值保持原样；
+这两个入口从其他目录启动时须显式传入绝对输入/输出路径（详见复现说明）。
+默认运行仍可能覆盖原结果，检查时不要执行正式入口。
+
+例如，在 PowerShell 中先设置 `$env:CITIBIKE_PROJECT_ROOT = 'E:\BikeSharing_OR_Project'`，
+再启动 Python；不需要改动源码。取消覆盖可使用 `Remove-Item Env:CITIBIKE_PROJECT_ROOT`。
+该设置改变共享根目录，不会重解释 CLI 显式传入的相对路径。
+从其他工作目录执行数据准备入口时，应把上述命令中的脚本、输入和输出路径全部写为绝对路径。
+Day 1 的 `audit_results` 与下游输入不衔接、Day 2 的 `DAY2_A` 与下游 `DAY2_A_FIXED`
+不衔接，是保留的历史默认行为；是否统一这些默认值应另行决定。
+
+轻量检查：从项目根目录运行 `python -B -m unittest discover -s tests -v`。
+测试需要已安装 requirements 中的依赖和本地阶段1 Git 检查点；不需要原始订单或有效求解许可证。
+检查覆盖跨工作目录、根目录覆盖、模块导入副作用以及全部23个程序的静态一致性；
+所有测试缓存写入系统临时目录，不调用正式入口，不代表全量仿真回归通过。
 
 注意：这不是已在新电脑完整验证的一键工作流。
 复现同一结果需要原始订单和冻结中间数据。
