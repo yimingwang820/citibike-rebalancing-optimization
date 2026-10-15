@@ -27,12 +27,12 @@ import json
 
 import pandas as pd
 
-import event_baseline as baseline_module
-import timeout_simulation as timeout_module
-import extract_trip_events as extract_module
+import citibike.simulation.event_baseline as baseline_module
+import citibike.simulation.timeout_simulation as timeout_module
+import citibike.preprocessing.extract_trip_events as extract_module
 
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 
 PLAN_DIR = (
     ROOT / "02_RESULTS"

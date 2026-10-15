@@ -23,7 +23,7 @@ from pathlib import Path
 import gurobipy as gp
 from gurobipy import GRB
 
-import hourly_balance_milp as previous
+import citibike.optimization.hourly_balance_milp as previous
 
 
 # ==================================================

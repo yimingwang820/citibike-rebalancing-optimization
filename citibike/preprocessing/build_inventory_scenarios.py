@@ -16,7 +16,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 DEFAULT_INPUT = ROOT / "02_RESULTS" / "DAY2_A_FIXED" / "day2_selected_candidates.csv"
 DEFAULT_OUTPUT = ROOT / "02_RESULTS" / "DAY2_B_INVENTORY"
 

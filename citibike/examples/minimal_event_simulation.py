@@ -1,6 +1,6 @@
 """Day 2-B: tiny event-level bicycle simulator, standard library only.
 
-Run: python minimal_event_simulation.py
+Run: python -m citibike.examples.minimal_event_simulation
 All trips are SYNTHETIC.  No inference about historical unmet demand.
 """
 from __future__ import annotations

@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """Day 3: identical-data LP vs integer bike-transfer MILP.
 
-Place alongside single_period_lp.py in PROJECT/01_CODE; run from any directory.
+From the project root: python -m citibike.experiments.compare_lp_milp
+Uses citibike.optimization.single_period_lp for shared inputs.
 Needs Python 3.12 and gurobipy in your own environment.
 """
 from __future__ import annotations
@@ -12,7 +13,7 @@ import csv
 import json
 from pathlib import Path
 
-from single_period_lp import (
+from citibike.optimization.single_period_lp import (
     ROOT,
     distance_km,
     load_average_departures,

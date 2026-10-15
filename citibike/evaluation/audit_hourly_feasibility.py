@@ -16,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 
 RESULTS = (
     ROOT / "02_RESULTS"

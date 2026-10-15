@@ -28,7 +28,7 @@ import numpy as np
 # 1. 路径和参数
 # ==================================================
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 
 SEED = "5980.10"
 

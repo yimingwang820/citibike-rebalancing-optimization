@@ -25,7 +25,7 @@ import pandas as pd
 # 1. 基本设置
 # ==================================================
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 RESULTS = ROOT / "02_RESULTS"
 
 STATION_FILE = (

@@ -28,7 +28,7 @@ import pandas as pd
 # 1. 项目路径
 # ============================================================
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 
 SEED = "5980.10"
 DATE = "2026-04-21"

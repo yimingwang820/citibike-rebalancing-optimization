@@ -25,7 +25,7 @@ from pathlib import Path
 import gurobipy as gp
 from gurobipy import GRB
 
-from single_period_lp import (
+from citibike.optimization.single_period_lp import (
     ROOT,
     distance_km,
     load_average_departures,

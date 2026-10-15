@@ -32,7 +32,7 @@ from gurobipy import GRB
 # 1. 实验参数
 # ============================================================
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 BASE = ROOT / "02_RESULTS"
 
 SEED = "5980.10"

@@ -20,13 +20,13 @@ import json
 
 import pandas as pd
 
-import weekend_preposition as wk
-import holdout_validation as hold
-import event_baseline as event_base
-import timeout_simulation as event_model
+import citibike.optimization.weekend_preposition as wk
+import citibike.evaluation.holdout_validation as hold
+import citibike.simulation.event_baseline as event_base
+import citibike.simulation.timeout_simulation as event_model
 
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 
 RESULTS = ROOT / "02_RESULTS"
 

@@ -16,11 +16,11 @@ import pandas as pd
 import gurobipy as gp
 from gurobipy import GRB
 
-import event_baseline as event_base
-import timeout_simulation as timeout_replay
+import citibike.simulation.event_baseline as event_base
+import citibike.simulation.timeout_simulation as timeout_replay
 
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 
 OUTPUT = (
     ROOT / "02_RESULTS" / "DAY6_PREPOSITION"

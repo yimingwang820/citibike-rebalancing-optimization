@@ -48,10 +48,24 @@
 
 ## 项目文件
 
-- `01_CODE/`：23个按功能命名的正式程序，当前仍保留在同一目录
+- `citibike/`：23个正式程序，按数据准备、仿真、优化、评估、对照实验和教学示例组织
+- `tests/`：不依赖原始订单或优化求解的轻量回归测试
 - `03_SHOWCASE/MODEL_AND_LIMITATIONS.md`：模型说明
 - `03_SHOWCASE/EXPERIMENTS.md`：实验结果
 - `03_SHOWCASE/*.png`：结果图
+
+```text
+citibike/
+├── paths.py          # 根目录与环境变量覆盖
+├── preprocessing/    # 6个数据准备程序
+├── simulation/       # 2个事件仿真程序
+├── optimization/     # 6个优化模型程序
+├── evaluation/       # 6个验证与结果分析程序
+├── experiments/      # 2个研究对照程序
+└── examples/         # 1个独立教学示例
+```
+
+每个目录均为Python包。原 `01_CODE/` 只保留本地忽略的学习、历史及交付辅助文件，不作为正式入口。
 
 ## 研究限制
 
@@ -84,17 +98,24 @@
 
 建议优先阅读：
 
-- [weekday_preposition.py](01_CODE/weekday_preposition.py)：工作日优化模型；入口还会运行开发日仿真。
-- [timeout_simulation.py](01_CODE/timeout_simulation.py)：30分钟超时事件仿真。
-- [holdout_validation.py](01_CODE/holdout_validation.py)：冻结工作日方案的跨日期验证。
-- [weekend_preposition.py](01_CODE/weekend_preposition.py)：周末12/24小时优化模型。
-- [weekend_validation.py](01_CODE/weekend_validation.py)：三折重新求解及周末事件验证。
+- [weekday_preposition.py](citibike/optimization/weekday_preposition.py)：工作日优化模型；入口还会运行开发日仿真。
+- [timeout_simulation.py](citibike/simulation/timeout_simulation.py)：30分钟超时事件仿真。
+- [holdout_validation.py](citibike/evaluation/holdout_validation.py)：冻结工作日方案的跨日期验证。
+- [weekend_preposition.py](citibike/optimization/weekend_preposition.py)：周末12/24小时优化模型。
+- [weekend_validation.py](citibike/evaluation/weekend_validation.py)：三折重新求解及周末事件验证。
 
 LP/MILP、固定成本和小时级多周期模型保留为对照实验，
 其求解结果不是最终预调拨主流程的必要输入。
+`optimization.strict_order_milp` 仍复用 `optimization.hourly_balance_milp`
+的加载函数和参数，因此小时聚合模型继续作为活动研究对照保留，未移入archive。
 现有 `02_RESULTS/DAY*` 目录和冻结结果文件名保持不变。
 
-项目根目录由 `01_CODE/project_paths.py` 根据代码位置确定，不依赖启动目录。
+从项目根目录使用 `python -m citibike.<子包>.<程序>`，例如
+`python -m citibike.preprocessing.audit_trip_data --help`。
+包初始化不会加载或运行实验。求解与仿真入口仍会写结果，不能用来检查安装。
+从其他工作目录调用时，需要让项目根目录位于Python模块搜索路径；具体设置见复现说明。
+
+项目根目录由 `citibike/paths.py` 根据代码位置确定，不依赖启动目录。
 可在启动 Python 前设置环境变量 `CITIBIKE_PROJECT_ROOT` 指向另一份项目根目录；
 所有模块在导入时绑定同一根目录，导入后改变环境变量不会更新已绑定路径，应重启进程。
 

@@ -18,8 +18,8 @@ import unittest
 from unittest.mock import patch
 from zipfile import ZipFile
 
-ROOT = Path(__file__).resolve().parents[1]
-CODE = ROOT / "01_CODE"
+from project_layout import ROOT, SCRIPTS, module_name, module_path, rewrite_imports
+CODE = ROOT
 CHECKPOINT = "7d1a0d3af1f149039517b7600de5095c6ea9365c"
 
 
@@ -40,12 +40,15 @@ class DateParametersTests(unittest.TestCase):
         def guard(event, args):
             if event == "open" and isinstance(args[0], (str, bytes, os.PathLike)):
                 p = Path(os.fsdecode(args[0])).resolve()
-                if any(p.is_relative_to(ROOT / folder) for folder in ("00_DATA", "02_RESULTS", "03_SHOWCASE")):
+                # Formal Markdown documentation is read by separate link tests;
+                # raw data and frozen result directories remain inaccessible.
+                if (any(p.is_relative_to(ROOT / folder) for folder in ("00_DATA", "02_RESULTS"))
+                        or (p.is_relative_to(ROOT / "03_SHOWCASE") and p.suffix != ".md")):
                     raise AssertionError("Test accessed protected project files: " + str(p))
         sys.addaudithook(guard)
         import pandas as pd
         cls.pd = pd
-        cls.modules = {n: importlib.import_module(n) for n in
+        cls.modules = {n: importlib.import_module(module_name(n)) for n in
                        ("event_baseline", "timeout_simulation", "wait_duration_diagnostics",
                         "holdout_validation", "weekend_validation", "weekend_preposition")}
         cls.legacy = {}
@@ -53,6 +56,7 @@ class DateParametersTests(unittest.TestCase):
             source = original(name).replace("import event_baseline as", "import legacy_event_baseline as")
             source = source.replace("import timeout_simulation as", "import legacy_timeout_simulation as")
             source = source.replace("import holdout_validation as", "import legacy_holdout_validation as")
+            source = rewrite_imports(source)
             alias = "legacy_" + name
             module = types.ModuleType(alias)
             module.__file__ = str(cls.scratch / (alias + ".py"))
@@ -258,7 +262,8 @@ class DateParametersTests(unittest.TestCase):
                    "wait_duration_diagnostics": {"replay_waits"},
                    "holdout_validation": {"extract_holdout", "reconcile", "main"},
                    "weekend_validation": {"event_evaluation"}}
-        for path in CODE.glob("*.py"):
+        for script in SCRIPTS:
+            path = module_path(script)
             if path.stem.startswith(("day7_", "lesson")) or path.stem == "project_paths":
                 continue
             old = ast.parse(original(path.stem))
@@ -296,7 +301,7 @@ class DateParametersTests(unittest.TestCase):
                     self.assertNotIn(n.attr, {"DATE", "DATES", "DATE_SET"})
         # Both validation callers must forward date explicitly at every replay.
         for name in ("holdout_validation", "weekend_validation"):
-            tree = ast.parse((CODE / (name + ".py")).read_text(encoding="utf-8-sig"))
+            tree = ast.parse(module_path(name).read_text(encoding="utf-8-sig"))
             for n in ast.walk(tree):
                 if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "replay":
                     self.assertIn("date", [k.arg for k in n.keywords])

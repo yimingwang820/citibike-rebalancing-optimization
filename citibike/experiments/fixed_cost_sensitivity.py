@@ -18,7 +18,7 @@ Day 3：固定调拨任务成本敏感性分析
 import csv
 import json
 
-import fixed_charge_milp as base
+import citibike.optimization.fixed_charge_milp as base
 
 
 FIXED_COST_VALUES = [0, 1, 3, 5, 10]

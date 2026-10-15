@@ -15,7 +15,7 @@ import json
 import numpy as np
 import pandas as pd
 
-import event_baseline as base
+import citibike.simulation.event_baseline as base
 
 
 OUTPUT = (

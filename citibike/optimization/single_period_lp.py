@@ -7,7 +7,7 @@ Model: all rebalancing happens before borrowing; no arrivals during this hour.
 This is a *scenario model*, not a reconstruction of historical operations.
 
 Windows PowerShell (from project directory):
-    & "D:\\Python\\python3.12.1\\python.exe" "01_CODE\\single_period_lp.py"
+    python -m citibike.optimization.single_period_lp
 
 Requires: gurobipy (already installed in the user's environment).
 """
@@ -21,7 +21,7 @@ import json
 import math
 from pathlib import Path
 
-from project_paths import ROOT
+from citibike.paths import ROOT
 
 
 def load_inventory(path: Path, scenario: str) -> list[dict]:
