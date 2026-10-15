@@ -1,0 +1,5 @@
+﻿strategy,borrow_rejected,return_timeouts,wait_minutes
+no_rebalancing,4,14,2578.9400000000005
+weekday_80,17,42,3729.09495
+weekend_W12,7,14,1293.79845
+weekend_W24_primary,12,14,1200.47135

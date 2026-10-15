@@ -1,0 +1,55 @@
+# Source data and generated/intermediate outputs
+/00_DATA/
+/02_RESULTS/
+
+# Private career materials and local backups
+**/*resume*
+**/*Resume*
+**/*RESUME*
+**/*简历*
+**/*CV*
+**/*cv*
+**/BACKUP_BEFORE_FINAL/
+
+# Learning exercises and delivery-only scripts
+/01_CODE/lesson*.py
+/01_CODE/citibike_day1_audit/
+/01_CODE/day7_*.py
+/03_SHOWCASE/README_CANDIDATE.md
+/03_SHOWCASE/GITIGNORE_SUGGESTION.txt
+/03_SHOWCASE/*_AUDIT.json
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Credentials, keys, and local configuration
+.env
+.env.*
+!.env.example
+*.lic
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*secrets*.json
+
+# License files and private copies
+/LICENSE*
+/LICENCE*
+**/LICENSE*
+**/LICENCE*
+*.private
+*.backup
+
+# Editor and temporary files
+.vscode/
+.idea/
+.tmp.*/
+~$*
+*.tmp
+*.bak
