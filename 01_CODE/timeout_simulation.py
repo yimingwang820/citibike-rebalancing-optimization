@@ -44,11 +44,14 @@ TOL = 1e-9
 # 2. 单情景事件仿真
 # ==================================================
 
-def replay(ids, capacity, initial, trips, scenario):
+def replay(ids, capacity, initial, trips, scenario, *, date=None):
+    if date is None:
+        date = base.DATE
+
 
     selected = set(ids)
 
-    day = pd.Timestamp(base.DATE)
+    day = pd.Timestamp(date)
     end_day = day + pd.Timedelta(days=1)
 
     patience = pd.Timedelta(
@@ -106,12 +109,12 @@ def replay(ids, capacity, initial, trips, scenario):
         ride_map[r.ride_id] = r
 
         start_today = (
-            r.start_date == base.DATE
+            r.start_date == date
             and r.start_station_id in selected
         )
 
         end_today = (
-            r.end_date == base.DATE
+            r.end_date == date
             and r.end_station_id in selected
         )
 
@@ -300,7 +303,7 @@ def replay(ids, capacity, initial, trips, scenario):
                 # 不生成其对应的归还事件
                 if (
                     r.end_station_id in selected
-                    and r.end_date == base.DATE
+                    and r.end_date == date
                 ):
 
                     counts[

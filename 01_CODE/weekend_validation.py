@@ -500,35 +500,18 @@ def load_weekday_stock(ids, capacity, initial):
 # 6. 4月25–26日事件级回放
 # ==================================================
 
-def event_evaluation(ids, cap, configurations):
+def event_evaluation(ids, cap, configurations, *, dates=None):
+
+    dates = list(EVAL_DATES if dates is None else dates)
 
     print()
     print(
         "[3/5] 读取周末订单并核对小时事件..."
     )
 
-    # 复用Day 6-C已经验收的提取函数，
-    # 临时将提取日期缩小至4月25–26日。
-    old_dates = hold.DATES
-    old_date_set = hold.DATE_SET
-
-    try:
-
-        hold.DATES = list(EVAL_DATES)
-        hold.DATE_SET = set(EVAL_DATES)
-
-        trips, extraction = (
-            hold.extract_holdout(ids)
-        )
-
-        recon, failures = (
-            hold.reconcile(trips, ids)
-        )
-
-    finally:
-
-        hold.DATES = old_dates
-        hold.DATE_SET = old_date_set
+    # 显式传入日期集合，保留调用者顺序。
+    trips, extraction = hold.extract_holdout(ids, dates=dates)
+    recon, failures = hold.reconcile(trips, ids, dates=dates)
 
     OUT.mkdir(
         parents=True,
@@ -566,144 +549,137 @@ def event_evaluation(ids, cap, configurations):
     records = []
     details = []
 
-    original_date = event_base.DATE
 
-    try:
+    for date in dates:
 
-        for date in EVAL_DATES:
 
-            event_base.DATE = date
+        starts = (
+            trips["start_date"].eq(date)
+            & trips["start_station_id"].isin(ids)
+        )
 
-            starts = (
-                trips["start_date"].eq(date)
-                & trips["start_station_id"].isin(ids)
+        ends = (
+            trips["end_date"].eq(date)
+            & trips["end_station_id"].isin(ids)
+        )
+
+        day_trips = trips.loc[
+            starts | ends
+        ].copy()
+
+        expected_starts = int(
+            starts.sum()
+        )
+
+        expected_ends = int(
+            ends.sum()
+        )
+
+        print()
+        print(
+            f"测试日期：{date}，"
+            f"借车={expected_starts}，"
+            f"归还={expected_ends}"
+        )
+
+        for label, stock in (
+            configurations.items()
+        ):
+
+            summary, waits, station_hour = (
+                event_model.replay(
+                    ids,
+                    cap,
+                    stock,
+                    day_trips,
+                    label,
+                    date=date
+                )
             )
 
-            ends = (
-                trips["end_date"].eq(date)
-                & trips["end_station_id"].isin(ids)
-            )
+            # ------------------------------
+            # 事件与车辆守恒验收
+            # ------------------------------
 
-            day_trips = trips.loc[
-                starts | ends
-            ].copy()
-
-            expected_starts = int(
-                starts.sum()
-            )
-
-            expected_ends = int(
-                ends.sum()
-            )
-
-            print()
-            print(
-                f"测试日期：{date}，"
-                f"借车={expected_starts}，"
-                f"归还={expected_ends}"
-            )
-
-            for label, stock in (
-                configurations.items()
+            if (
+                summary["requests"]
+                != expected_starts
             ):
-
-                summary, waits, station_hour = (
-                    event_model.replay(
-                        ids,
-                        cap,
-                        stock,
-                        day_trips,
-                        label
-                    )
+                raise AssertionError(
+                    f"{date} {label}"
+                    "借车请求对账失败"
                 )
 
-                # ------------------------------
-                # 事件与车辆守恒验收
-                # ------------------------------
+            actual_ends = (
+                summary["arrival_attempts"]
+                + summary[
+                    "cancelled_internal_arrivals_today"
+                ]
+            )
 
-                if (
-                    summary["requests"]
-                    != expected_starts
-                ):
-                    raise AssertionError(
-                        f"{date} {label}"
-                        "借车请求对账失败"
-                    )
-
-                actual_ends = (
-                    summary["arrival_attempts"]
-                    + summary[
-                        "cancelled_internal_arrivals_today"
-                    ]
+            if actual_ends != expected_ends:
+                raise AssertionError(
+                    f"{date} {label}"
+                    "归还事件对账失败"
                 )
 
-                if actual_ends != expected_ends:
-                    raise AssertionError(
-                        f"{date} {label}"
-                        "归还事件对账失败"
-                    )
-
-                if (
-                    summary["vehicle_conservation"]
-                    != "PASS"
-                ):
-                    raise AssertionError(
-                        "车辆守恒失败"
-                    )
-
-                records.append({
-
-                    "date": date,
-                    "strategy": label,
-
-                    "borrow_requests":
-                        summary["requests"],
-
-                    "borrow_rejected":
-                        summary["borrow_rejected"],
-
-                    "arrival_attempts":
-                        summary["arrival_attempts"],
-
-                    "return_timeouts":
-                        summary["timeout_external_exit"],
-
-                    "target_docked":
-                        summary["target_station_docked"],
-
-                    "return_completion_rate":
-                        summary[
-                            "target_station_docking_rate"
-                        ],
-
-                    "wait_occurrences":
-                        summary["wait_occurrences"],
-
-                    "observed_wait_minutes":
-                        summary["observed_total_wait_min"],
-
-                    "pending_at_midnight":
-                        summary["pending_at_midnight"]
-                })
-
-                details.extend(
-                    [
-                        {"date": date, **row}
-                        for row in station_hour
-                    ]
+            if (
+                summary["vehicle_conservation"]
+                != "PASS"
+            ):
+                raise AssertionError(
+                    "车辆守恒失败"
                 )
 
-                print(
-                    f"  {label:<20}"
-                    f"拒绝={summary['borrow_rejected']:<4}"
-                    f"超时={summary['timeout_external_exit']:<4}"
-                    f"等待分钟="
-                    f"{summary['observed_total_wait_min']:.1f}"
-                )
+            records.append({
 
-    finally:
+                "date": date,
+                "strategy": label,
 
-        event_base.DATE = original_date
+                "borrow_requests":
+                    summary["requests"],
+
+                "borrow_rejected":
+                    summary["borrow_rejected"],
+
+                "arrival_attempts":
+                    summary["arrival_attempts"],
+
+                "return_timeouts":
+                    summary["timeout_external_exit"],
+
+                "target_docked":
+                    summary["target_station_docked"],
+
+                "return_completion_rate":
+                    summary[
+                        "target_station_docking_rate"
+                    ],
+
+                "wait_occurrences":
+                    summary["wait_occurrences"],
+
+                "observed_wait_minutes":
+                    summary["observed_total_wait_min"],
+
+                "pending_at_midnight":
+                    summary["pending_at_midnight"]
+            })
+
+            details.extend(
+                [
+                    {"date": date, **row}
+                    for row in station_hour
+                ]
+            )
+
+            print(
+                f"  {label:<20}"
+                f"拒绝={summary['borrow_rejected']:<4}"
+                f"超时={summary['timeout_external_exit']:<4}"
+                f"等待分钟="
+                f"{summary['observed_total_wait_min']:.1f}"
+            )
 
     # --------------------------------------------------
     # 6.1 与已经完成的Day 6-C结果进行回归验收

@@ -35,11 +35,16 @@ def replay_waits(
     capacity,
     initial,
     trips,
-    scenario
+    scenario,
+    *,
+    date=None
 ):
+    if date is None:
+        date = base.DATE
+
     selected = set(ids)
 
-    day = pd.Timestamp(base.DATE)
+    day = pd.Timestamp(date)
     tomorrow = day + pd.Timedelta(days=1)
 
     dock = dict(initial)
@@ -93,12 +98,12 @@ def replay_waits(
         ride_index[r.ride_id] = r
 
         local_start_today = (
-            r.start_date == base.DATE
+            r.start_date == date
             and r.start_station_id in selected
         )
 
         local_end_today = (
-            r.end_date == base.DATE
+            r.end_date == date
             and r.end_station_id in selected
         )
 
@@ -243,7 +248,7 @@ def replay_waits(
                         "cancelled_internal_arrivals"
                     ] += 1
 
-                    if r.end_date == base.DATE:
+                    if r.end_date == date:
 
                         counters[
                             "cancelled_internal_arrivals_today"

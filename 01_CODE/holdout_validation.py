@@ -52,6 +52,7 @@ DATES = [
     )
 ]
 
+# Compatibility snapshot only; dynamic membership is local to each call.
 DATE_SET = set(DATES)
 
 SEED = "5980.10"
@@ -282,7 +283,10 @@ def load_frozen_plan():
 # 3. 从原始ZIP提取保留日期订单
 # ==================================================
 
-def extract_holdout(ids):
+def extract_holdout(ids, *, dates=None):
+    dates = list(DATES if dates is None else dates)
+    date_set = set(dates)
+
 
     selected = set(ids)
 
@@ -374,12 +378,12 @@ def extract_holdout(ids):
                         chunk.started_at
                         .astype("string")
                         .str[:10]
-                        .isin(DATE_SET)
+                        .isin(date_set)
                         |
                         chunk.ended_at
                         .astype("string")
                         .str[:10]
-                        .isin(DATE_SET)
+                        .isin(date_set)
                     )
 
                     take = local & matching_date
@@ -556,7 +560,10 @@ def extract_holdout(ids):
 # 4. 与修复后的小时数据逐日对账
 # ==================================================
 
-def reconcile(trips, ids):
+def reconcile(trips, ids, *, dates=None):
+    dates = list(DATES if dates is None else dates)
+    date_set = set(dates)
+
 
     selected = set(ids)
 
@@ -575,7 +582,7 @@ def reconcile(trips, ids):
     for chunk in reader:
 
         keep = (
-            chunk.date.isin(DATE_SET)
+            chunk.date.isin(date_set)
             & chunk.station_id.isin(selected)
         )
 
@@ -612,7 +619,7 @@ def reconcile(trips, ids):
     )
 
     starts = trips.loc[
-        trips.start_date.isin(DATE_SET)
+        trips.start_date.isin(date_set)
         & trips.start_station_id.isin(selected),
         [
             "start_date",
@@ -630,7 +637,7 @@ def reconcile(trips, ids):
     starts["type"] = "start"
 
     ends = trips.loc[
-        trips.end_date.isin(DATE_SET)
+        trips.end_date.isin(date_set)
         & trips.end_station_id.isin(selected),
         [
             "end_date",
@@ -661,7 +668,7 @@ def reconcile(trips, ids):
 
     index = pd.MultiIndex.from_product(
         [
-            DATES,
+            dates,
             ids,
             list(range(24)),
             ["start", "end"]
@@ -802,7 +809,9 @@ def make_group(rows, title, cost):
 # 6. 主程序
 # ==================================================
 
-def main():
+def main(*, dates=None):
+
+    dates = list(DATES if dates is None else dates)
 
     print("=" * 64)
     print(
@@ -840,7 +849,7 @@ def main():
     # 6.2 提取所有测试日订单
     # ----------------------------------------------
 
-    trips, stats = extract_holdout(ids)
+    trips, stats = extract_holdout(ids, dates=dates)
 
     print(
         "[2/4] 从原始ZIP提取相关订单："
@@ -852,7 +861,7 @@ def main():
     # ----------------------------------------------
 
     rec, failures = reconcile(
-        trips, ids
+        trips, ids, dates=dates
     )
 
     OUT_DIR.mkdir(
@@ -881,7 +890,7 @@ def main():
         )
 
     print(
-        "[3/4] PASS：9天全部站点的小时借还"
+        f"[3/4] PASS：{len(dates)}天全部站点的小时借还"
         "事件与修复后汇总一致"
     )
 
@@ -892,226 +901,218 @@ def main():
     records = []
     station_hour = []
 
-    old_date = baseline_module.DATE
 
-    try:
+    for date in dates:
 
-        for date in DATES:
+        # 显式传入日期，不修改共享仿真模块状态。
 
-            # 仿真器原先固定使用4月21日。
-            # 顺序回放时临时设置日期，
-            # 回放结束后恢复，不修改任何源文件。
-            baseline_module.DATE = date
+        starts = (
+            trips.start_date.eq(date)
+            & trips.start_station_id.isin(ids)
+        )
 
-            starts = (
-                trips.start_date.eq(date)
-                & trips.start_station_id.isin(ids)
+        ends = (
+            trips.end_date.eq(date)
+            & trips.end_station_id.isin(ids)
+        )
+
+        day_trips = trips.loc[
+            starts | ends
+        ].copy()
+
+        expected_starts = int(
+            starts.sum()
+        )
+
+        expected_ends = int(
+            ends.sum()
+        )
+
+        if day_trips.empty:
+            raise RuntimeError(
+                f"{date}没有提取到订单"
             )
 
-            ends = (
-                trips.end_date.eq(date)
-                & trips.end_station_id.isin(ids)
+        # 原始853辆，无调拨
+        base, _, base_hour = (
+            timeout_module.replay(
+                ids,
+                capacity,
+                before,
+                day_trips,
+                "baseline_balanced_50",
+                date=date
             )
+        )
 
-            day_trips = trips.loc[
-                starts | ends
-            ].copy()
-
-            expected_starts = int(
-                starts.sum()
+        # 同一日期、同一订单，
+        # 使用冻结后的调拨库存
+        plan, _, plan_hour = (
+            timeout_module.replay(
+                ids,
+                capacity,
+                after,
+                day_trips,
+                "training_preposition",
+                date=date
             )
+        )
 
-            expected_ends = int(
-                ends.sum()
-            )
+        # --------------------------------------
+        # 借还事件及车辆守恒验收
+        # --------------------------------------
 
-            if day_trips.empty:
-                raise RuntimeError(
-                    f"{date}没有提取到订单"
+        for label, result in (
+            ("baseline", base),
+            ("plan", plan)
+        ):
+
+            if result["requests"] != expected_starts:
+                raise AssertionError(
+                    f"{date} {label}"
+                    "借车事件数未对账"
                 )
 
-            # 原始853辆，无调拨
-            base, _, base_hour = (
-                timeout_module.replay(
-                    ids,
-                    capacity,
-                    before,
-                    day_trips,
-                    "baseline_balanced_50"
-                )
+            actual_returns = (
+                result["arrival_attempts"]
+                + result[
+                    "cancelled_internal_arrivals_today"
+                ]
             )
 
-            # 同一日期、同一订单，
-            # 使用冻结后的调拨库存
-            plan, _, plan_hour = (
-                timeout_module.replay(
-                    ids,
-                    capacity,
-                    after,
-                    day_trips,
-                    "training_preposition"
+            if actual_returns != expected_ends:
+                raise AssertionError(
+                    f"{date} {label}"
+                    "归还事件数未对账"
                 )
-            )
 
-            # --------------------------------------
-            # 借还事件及车辆守恒验收
-            # --------------------------------------
-
-            for label, result in (
-                ("baseline", base),
-                ("plan", plan)
+            if (
+                result["vehicle_conservation"]
+                != "PASS"
             ):
-
-                if result["requests"] != expected_starts:
-                    raise AssertionError(
-                        f"{date} {label}"
-                        "借车事件数未对账"
-                    )
-
-                actual_returns = (
-                    result["arrival_attempts"]
-                    + result[
-                        "cancelled_internal_arrivals_today"
-                    ]
+                raise AssertionError(
+                    f"{date} {label}"
+                    "车辆不守恒"
                 )
 
-                if actual_returns != expected_ends:
-                    raise AssertionError(
-                        f"{date} {label}"
-                        "归还事件数未对账"
-                    )
+        for row in base_hour + plan_hour:
 
-                if (
-                    result["vehicle_conservation"]
-                    != "PASS"
-                ):
-                    raise AssertionError(
-                        f"{date} {label}"
-                        "车辆不守恒"
-                    )
-
-            for row in base_hour + plan_hour:
-
-                station_hour.append({
-                    "date": date,
-                    **row
-                })
-
-            weekday = (
-                "weekday"
-                if pd.Timestamp(date).weekday() < 5
-                else "weekend"
-            )
-
-            # --------------------------------------
-            # 每日评价指标
-            # --------------------------------------
-
-            row = {
-
+            station_hour.append({
                 "date": date,
-                "day_type": weekday,
+                **row
+            })
 
-                "requests": expected_starts,
+        weekday = (
+            "weekday"
+            if pd.Timestamp(date).weekday() < 5
+            else "weekend"
+        )
 
-                "historical_arrival_events":
-                    expected_ends,
+        # --------------------------------------
+        # 每日评价指标
+        # --------------------------------------
 
-                "base_rejected":
-                    int(base["borrow_rejected"]),
+        row = {
 
-                "plan_rejected":
-                    int(plan["borrow_rejected"]),
+            "date": date,
+            "day_type": weekday,
 
-                "change_rejected":
-                    int(
-                        plan["borrow_rejected"]
-                        - base["borrow_rejected"]
-                    ),
+            "requests": expected_starts,
 
-                "base_timeouts":
-                    int(base["timeout_external_exit"]),
+            "historical_arrival_events":
+                expected_ends,
 
-                "plan_timeouts":
-                    int(plan["timeout_external_exit"]),
+            "base_rejected":
+                int(base["borrow_rejected"]),
 
-                "change_timeouts":
-                    int(
-                        plan["timeout_external_exit"]
-                        - base["timeout_external_exit"]
-                    ),
+            "plan_rejected":
+                int(plan["borrow_rejected"]),
 
-                "base_arrivals":
-                    int(base["arrival_attempts"]),
+            "change_rejected":
+                int(
+                    plan["borrow_rejected"]
+                    - base["borrow_rejected"]
+                ),
 
-                "plan_arrivals":
-                    int(plan["arrival_attempts"]),
+            "base_timeouts":
+                int(base["timeout_external_exit"]),
 
-                "base_docked":
-                    int(base["target_station_docked"]),
+            "plan_timeouts":
+                int(plan["timeout_external_exit"]),
 
-                "plan_docked":
-                    int(plan["target_station_docked"]),
+            "change_timeouts":
+                int(
+                    plan["timeout_external_exit"]
+                    - base["timeout_external_exit"]
+                ),
 
-                "base_dock_rate":
-                    float(
-                        base[
-                            "target_station_docking_rate"
-                        ]
-                    ),
+            "base_arrivals":
+                int(base["arrival_attempts"]),
 
-                "plan_dock_rate":
-                    float(
-                        plan[
-                            "target_station_docking_rate"
-                        ]
-                    ),
+            "plan_arrivals":
+                int(plan["arrival_attempts"]),
 
-                "base_wait_min":
-                    float(
-                        base["observed_total_wait_min"]
-                    ),
+            "base_docked":
+                int(base["target_station_docked"]),
 
-                "plan_wait_min":
-                    float(
-                        plan["observed_total_wait_min"]
-                    ),
+            "plan_docked":
+                int(plan["target_station_docked"]),
 
-                "base_pending":
-                    int(
-                        base["pending_at_midnight"]
-                    ),
+            "base_dock_rate":
+                float(
+                    base[
+                        "target_station_docking_rate"
+                    ]
+                ),
 
-                "plan_pending":
-                    int(
-                        plan["pending_at_midnight"]
-                    ),
+            "plan_dock_rate":
+                float(
+                    plan[
+                        "target_station_docking_rate"
+                    ]
+                ),
 
-                "move_bikes": EXPECTED_MOVES,
+            "base_wait_min":
+                float(
+                    base["observed_total_wait_min"]
+                ),
 
-                "synthetic_preposition_cost_units":
-                    round(cost, 4)
-            }
+            "plan_wait_min":
+                float(
+                    plan["observed_total_wait_min"]
+                ),
 
-            records.append(row)
+            "base_pending":
+                int(
+                    base["pending_at_midnight"]
+                ),
 
-            print(
-                f"  {date} {weekday:7} "
-                "借车拒绝 "
-                f"{row['base_rejected']}"
-                "→"
-                f"{row['plan_rejected']}；"
-                "归还超时 "
-                f"{row['base_timeouts']}"
-                "→"
-                f"{row['plan_timeouts']}；"
-                "净变化 "
-                f"{row['change_timeouts']:+d}"
-            )
+            "plan_pending":
+                int(
+                    plan["pending_at_midnight"]
+                ),
 
-    finally:
+            "move_bikes": EXPECTED_MOVES,
 
-        baseline_module.DATE = old_date
+            "synthetic_preposition_cost_units":
+                round(cost, 4)
+        }
+
+        records.append(row)
+
+        print(
+            f"  {date} {weekday:7} "
+            "借车拒绝 "
+            f"{row['base_rejected']}"
+            "→"
+            f"{row['plan_rejected']}；"
+            "归还超时 "
+            f"{row['base_timeouts']}"
+            "→"
+            f"{row['plan_timeouts']}；"
+            "净变化 "
+            f"{row['change_timeouts']:+d}"
+        )
 
     # ----------------------------------------------
     # 6.5 工作日与周末分组
@@ -1175,7 +1176,7 @@ def main():
         "development_date_excluded":
             "2026-04-21",
 
-        "holdout_dates": DATES,
+        "holdout_dates": dates,
 
         "policy": (
             "Same frozen midnight preposition: "

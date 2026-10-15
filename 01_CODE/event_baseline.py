@@ -68,7 +68,10 @@ OUT_DIR = (
 # 2. 读取并验收输入
 # ============================================================
 
-def read_inputs():
+def read_inputs(*, date=None):
+    if date is None:
+        date = DATE
+
 
     for path in (
         STATIONS_FILE,
@@ -243,12 +246,12 @@ def read_inputs():
         )
 
     local_starts = (
-        (trips["start_date"] == DATE)
+        (trips["start_date"] == date)
         & trips["start_station_id"].isin(selected)
     )
 
     local_ends = (
-        (trips["end_date"] == DATE)
+        (trips["end_date"] == date)
         & trips["end_station_id"].isin(selected)
     )
 
@@ -271,11 +274,14 @@ def read_inputs():
 # 3. 事件驱动仿真
 # ============================================================
 
-def simulate(ids, capacity, initial, trips, scenario):
+def simulate(ids, capacity, initial, trips, scenario, *, date=None):
+    if date is None:
+        date = DATE
+
 
     selected = set(ids)
 
-    day = pd.Timestamp(DATE)
+    day = pd.Timestamp(date)
     tomorrow = day + pd.Timedelta(days=1)
 
     # 已停靠车辆
@@ -316,12 +322,12 @@ def simulate(ids, capacity, initial, trips, scenario):
         ride_lookup[r.ride_id] = r
 
         start_today = (
-            r.start_date == DATE
+            r.start_date == date
             and r.start_station_id in selected
         )
 
         end_today = (
-            r.end_date == DATE
+            r.end_date == date
             and r.end_station_id in selected
         )
 
@@ -452,7 +458,7 @@ def simulate(ids, capacity, initial, trips, scenario):
             # 属于初始时刻已经在途的车辆。
             if (
                 r.start_station_id in selected
-                and r.start_date < DATE
+                and r.start_date < date
             ):
 
                 counters[
@@ -574,7 +580,7 @@ def simulate(ids, capacity, initial, trips, scenario):
                         "cancelled_internal_arrivals"
                     ] += 1
 
-                    if r.end_date == DATE:
+                    if r.end_date == date:
 
                         counters[
                             "cancelled_internal_arrivals_today"
