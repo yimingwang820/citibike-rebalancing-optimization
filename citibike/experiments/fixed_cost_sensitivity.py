@@ -15,7 +15,7 @@ Day 3：固定调拨任务成本敏感性分析
     不设置路线数量上限。
 """
 
-import csv
+from citibike.file_io import write_records_csv
 import json
 
 import citibike.optimization.fixed_charge_milp as base
@@ -34,21 +34,7 @@ OUTPUT_DIR = (
 
 
 def save_csv(filepath, rows):
-    if not rows:
-        return
-
-    with open(
-        filepath,
-        "w",
-        encoding="utf-8-sig",
-        newline=""
-    ) as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=list(rows[0].keys())
-        )
-        writer.writeheader()
-        writer.writerows(rows)
+    return write_records_csv(filepath, rows)
 
 
 def main():

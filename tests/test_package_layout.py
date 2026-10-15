@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from project_layout import ROOT, SCRIPTS, module_name, module_path, rewrite_imports
+from project_layout import ROOT, SCRIPTS, module_name, module_path, rewrite_imports, adapt_shared_io
 from test_project_paths import PROBE
 
 CHECKPOINT = "7f571153a14b78791294d18c6abb74c70645df38"
@@ -28,13 +28,13 @@ class PackageLayoutTests(unittest.TestCase):
                     self.assertTrue((path.parent / target.split("#")[0]).is_file(), target)
             self.assertNotRegex(source, r"python 01_CODE/\w+\.py")
 
-    def test_whole_program_ast_only_imports_and_module_docs_changed(self):
+    def test_whole_program_ast_matches_reviewed_refactors(self):
         for name in SCRIPTS + ["project_paths"]:
             old = subprocess.check_output(["git", "show", CHECKPOINT + ":01_CODE/" + name + ".py"], cwd=ROOT).decode("utf-8-sig")
             new = module_path(name).read_text(encoding="utf-8-sig")
             tree = ast.parse(new)
             compile(tree, str(module_path(name)), "exec")
-            expected = ast.parse(rewrite_imports(old))
+            expected = adapt_shared_io(ast.parse(rewrite_imports(old)), name)
             # Only module-level usage examples may change with the invocation.
             # Function docstrings and every executable statement still compare.
             for parsed in (expected, tree):

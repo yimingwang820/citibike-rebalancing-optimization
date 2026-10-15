@@ -17,7 +17,7 @@ Day 3：Citi Bike 固定调拨任务成本 MILP
 
 from __future__ import annotations
 
-import csv
+from citibike.file_io import write_records_csv
 import json
 import math
 from pathlib import Path
@@ -638,24 +638,7 @@ def solve_model(
 # ============================================================
 
 def save_csv(path, records):
-
-    if not records:
-        return
-
-    with open(
-        path,
-        "w",
-        encoding="utf-8-sig",
-        newline=""
-    ) as f:
-
-        writer = csv.DictWriter(
-            f,
-            fieldnames=list(records[0].keys())
-        )
-
-        writer.writeheader()
-        writer.writerows(records)
+    return write_records_csv(path, records)
 
 
 # ============================================================

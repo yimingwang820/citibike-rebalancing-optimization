@@ -1,5 +1,6 @@
 """Explicit names used by migration and historical regression tests."""
 from pathlib import Path
+import ast
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +18,29 @@ GROUPS = {
 MODULES = {name: f"citibike.{group}.{name}" for group, names in GROUPS.items() for name in names}
 MODULES["project_paths"] = "citibike.paths"
 SCRIPTS = sorted(set(MODULES) - {"project_paths"})
+
+# Exact, reviewed helper-only substitutions accepted by historical AST tests.
+IO_EXTRACTIONS = {
+    "holdout_validation": ("file_sha256", "path", "from hashlib import sha256", "from citibike.file_io import file_sha256 as _file_sha256", "_file_sha256"),
+    "weekend_validation": ("fingerprint", "path", "from hashlib import sha256", "from citibike.file_io import file_sha256 as _file_sha256", "_file_sha256"),
+    "weekend_preposition": ("sha256", "path", "import hashlib", "from citibike.file_io import file_sha256 as _file_sha256", "_file_sha256"),
+    "fixed_charge_milp": ("save_csv", "path, records", "import csv", "from citibike.file_io import write_records_csv", "write_records_csv"),
+    "fixed_cost_sensitivity": ("save_csv", "filepath, rows", "import csv", "from citibike.file_io import write_records_csv", "write_records_csv"),
+}
+
+
+def adapt_shared_io(tree, name):
+    """Allow only exact helper delegates, not arbitrary function exceptions."""
+    if name not in IO_EXTRACTIONS:
+        return tree
+    function, args, old_import, new_import, target = IO_EXTRACTIONS[name]
+    old_node = ast.parse(old_import).body[0]
+    for index, node in enumerate(tree.body):
+        if ast.dump(node) == ast.dump(old_node):
+            tree.body[index] = ast.parse(new_import).body[0]
+        elif isinstance(node, ast.FunctionDef) and node.name == function:
+            tree.body[index] = ast.parse(f"def {function}({args}):\n    return {target}({args})").body[0]
+    return tree
 
 
 def module_name(name):

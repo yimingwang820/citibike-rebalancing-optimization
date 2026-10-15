@@ -18,7 +18,7 @@ import unittest
 from unittest.mock import patch
 from zipfile import ZipFile
 
-from project_layout import ROOT, SCRIPTS, module_name, module_path, rewrite_imports
+from project_layout import ROOT, SCRIPTS, module_name, module_path, rewrite_imports, adapt_shared_io
 CODE = ROOT
 CHECKPOINT = "7d1a0d3af1f149039517b7600de5095c6ea9365c"
 
@@ -266,7 +266,7 @@ class DateParametersTests(unittest.TestCase):
             path = module_path(script)
             if path.stem.startswith(("day7_", "lesson")) or path.stem == "project_paths":
                 continue
-            old = ast.parse(original(path.stem))
+            old = adapt_shared_io(ast.parse(original(path.stem)), path.stem)
             new = ast.parse(path.read_text(encoding="utf-8-sig"))
             old_funcs = {n.name: n for n in old.body if isinstance(n, (ast.FunctionDef, ast.ClassDef))}
             new_funcs = {n.name: n for n in new.body if isinstance(n, (ast.FunctionDef, ast.ClassDef))}

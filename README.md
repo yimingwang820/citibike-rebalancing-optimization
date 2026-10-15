@@ -57,6 +57,7 @@
 ```text
 citibike/
 ├── paths.py          # 根目录与环境变量覆盖
+├── file_io.py        # 共享SHA256及同语义CSV写入
 ├── preprocessing/    # 6个数据准备程序
 ├── simulation/       # 2个事件仿真程序
 ├── optimization/     # 6个优化模型程序
@@ -96,13 +97,15 @@ citibike/
 3. 求解工作日午夜预调拨方案，在开发日诊断并进行跨日期验证。
 4. 独立训练周末方案，再进行三折代理验证与周末事件验证。
 
-建议优先阅读：
+建议优先阅读以下四个核心程序：
 
 - [weekday_preposition.py](citibike/optimization/weekday_preposition.py)：工作日优化模型；入口还会运行开发日仿真。
-- [timeout_simulation.py](citibike/simulation/timeout_simulation.py)：30分钟超时事件仿真。
-- [holdout_validation.py](citibike/evaluation/holdout_validation.py)：冻结工作日方案的跨日期验证。
 - [weekend_preposition.py](citibike/optimization/weekend_preposition.py)：周末12/24小时优化模型。
+- [holdout_validation.py](citibike/evaluation/holdout_validation.py)：冻结工作日方案的跨日期验证。
 - [weekend_validation.py](citibike/evaluation/weekend_validation.py)：三折重新求解及周末事件验证。
+
+理解结果验证时，配合阅读 [timeout_simulation.py](citibike/simulation/timeout_simulation.py)
+中的30分钟超时事件仿真。其他研究对照和教学示例继续保留。
 
 LP/MILP、固定成本和小时级多周期模型保留为对照实验，
 其求解结果不是最终预调拨主流程的必要输入。

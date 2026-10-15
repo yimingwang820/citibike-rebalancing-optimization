@@ -15,7 +15,7 @@ Day 6-F:
 """
 
 from pathlib import Path
-from hashlib import sha256
+from citibike.file_io import file_sha256 as _file_sha256
 import json
 
 import pandas as pd
@@ -54,18 +54,7 @@ TOL = 1e-6
 # ==================================================
 
 def fingerprint(path):
-
-    h = sha256()
-
-    with path.open("rb") as file:
-
-        for block in iter(
-            lambda: file.read(1024 * 1024),
-            b""
-        ):
-            h.update(block)
-
-    return h.hexdigest()
+    return _file_sha256(path)
 
 
 # ==================================================

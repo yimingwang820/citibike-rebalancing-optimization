@@ -12,7 +12,7 @@ Day 6-E：周末专用午夜预调拨 MILP
 """
 
 from pathlib import Path
-import hashlib
+from citibike.file_io import file_sha256 as _file_sha256
 import json
 import math
 
@@ -76,18 +76,7 @@ TOL = 1e-5
 # ==================================================
 
 def sha256(path):
-
-    h = hashlib.sha256()
-
-    with path.open("rb") as f:
-
-        for block in iter(
-            lambda: f.read(1024 * 1024),
-            b""
-        ):
-            h.update(block)
-
-    return h.hexdigest()
+    return _file_sha256(path)
 
 
 def km(p, q):

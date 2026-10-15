@@ -20,7 +20,7 @@ Day 6-C：冻结预调拨方案，跨日期事件仿真验证
 
 from __future__ import annotations
 
-from hashlib import sha256
+from citibike.file_io import file_sha256 as _file_sha256
 from pathlib import Path
 from zipfile import ZipFile
 import json
@@ -68,18 +68,7 @@ EXPECTED_PAIRS = 6
 # ==================================================
 
 def file_sha256(path):
-
-    h = sha256()
-
-    with path.open("rb") as f:
-
-        for block in iter(
-            lambda: f.read(1024 * 1024),
-            b""
-        ):
-            h.update(block)
-
-    return h.hexdigest()
+    return _file_sha256(path)
 
 
 # ==================================================
